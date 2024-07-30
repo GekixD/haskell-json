@@ -17,7 +17,7 @@ data JsonValue
   | JsonObj [(String, JsonValue)]
   deriving (Show, Eq)
 
--- Define the parser type,
+-- Define the parser type
 -- error checking ?
 newtype Parser a = Parser
   { runParser :: String -> Maybe (String, a)
