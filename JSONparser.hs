@@ -2,9 +2,9 @@
 
 module Haskell.JSONparser where
 
-import Control.Applicative (Alternative (empty), many, (<|>))
+import Control.Applicative (Alternative (empty), many, some, (<|>))
 import Data.Char (isDigit, isSpace, ord)
-import Distribution.Utils.Json (Json)
+import Data.Text.Internal.Builder.Int.Digits (digits)
 
 -- JSON constructor for the values struct
 -- comments ?
@@ -16,6 +16,9 @@ data JsonValue
   | JsonArr [JsonValue]
   | JsonObj [(String, JsonValue)]
   deriving (Show, Eq)
+
+-- Parsing error support
+data ParseError = ParseError Int String deriving (Show)
 
 -- Define the parser type
 -- error checking ?
@@ -72,6 +75,15 @@ notNull (Parser p) = Parser $ \input -> do
 stringLiteral :: Parser String
 stringLiteral = charP '"' *> spanP (/= '"') <* charP '"'
 
+-- Num
+-- Signature meaning: Sign, Whole part, Decimal part, exponent -> Double
+doubleParts :: Int -> Int -> Double -> Int -> Double
+doubleParts sign int dec exp = fromIntegral sign * (fromIntegral int + dec) * (10 ^^ exp)
+
+-- Num
+doubleLiteral :: Parser Double
+doubleLiteral = undefined
+
 -- Arr, Obj
 ws :: Parser String
 ws = spanP isSpace
@@ -85,11 +97,10 @@ jsonNull :: Parser JsonValue
 jsonNull = JsonNull <$ stringP "null"
 
 jsonBool :: Parser JsonValue
-jsonBool = f <$> (stringP "true" <|> stringP "false")
+jsonBool = jsonTrue <|> jsonFalse
   where
-    f "true" = JsonBool True
-    f "false" = JsonBool False
-    _ = Nothing
+    jsonTrue = JsonBool True <$ stringP "true"
+    jsonFalse = JsonBool False <$ stringP "false"
 
 jsonNum :: Parser JsonValue
 jsonNum = f <$> notNull (spanP isDigit)
@@ -114,6 +125,10 @@ jsonObj = JsonObj <$> (charP '{' *> ws *> pairs <* ws <* charP '}')
 -- Combined final parser
 jsonValue :: Parser JsonValue
 jsonValue = jsonNull <|> jsonBool <|> jsonNum <|> jsonStr <|> jsonArr <|> jsonObj
+
+-- Keeps only the produced JSON
+jsonParse :: String -> Maybe JsonValue
+jsonParse input = snd <$> runParser jsonValue input
 
 -- Hepler to parse files
 parseFile :: FilePath -> Parser a -> IO (Maybe a)
