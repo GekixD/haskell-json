@@ -2,7 +2,7 @@
 ## With no external dependancies (not in the base module)
 
 Current Issues:
-- No float support in JsonNum
+- No double support in JsonNum
 - No comment support fro JSON files
 - No error logging
 -No escaping suppot for strings

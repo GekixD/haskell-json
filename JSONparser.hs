@@ -11,7 +11,7 @@ import Data.Text.Internal.Builder.Int.Digits (digits)
 data JsonValue
   = JsonNull
   | JsonBool Bool
-  | JsonNum Int -- float support ?
+  | JsonNum Int -- double support ?
   | JsonStr String
   | JsonArr [JsonValue]
   | JsonObj [(String, JsonValue)]
